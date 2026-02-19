@@ -1,0 +1,23 @@
+{
+  "name": "MC Fishing Pond Dev Container",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  "mounts": [
+    "source=mc-fishing-pond-gradle-cache,target=/root/.gradle,type=volume"
+  ],
+  "postCreateCommand": "cd /workspace && chmod +x gradlew && ./gradlew dependencies --no-daemon || true",
+  "remoteUser": "root",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "redhat.java",
+        "vscjava.vscode-gradle",
+        "vscjava.vscode-java-pack"
+      ]
+    }
+  }
+}
