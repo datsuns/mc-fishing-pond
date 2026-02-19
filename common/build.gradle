@@ -1,0 +1,20 @@
+plugins {
+    id 'dev.architectury.loom'
+    id 'architectury-plugin'
+}
+
+architectury {
+    common(rootProject.enabled_platforms.split(','))
+}
+
+loom {
+    silentMojangMappingsLicense()
+}
+
+dependencies {
+    minecraft("com.mojang:minecraft:${rootProject.minecraft_version}")
+    mappings(loom.officialMojangMappings())
+
+    // Architectury API common
+    modImplementation("dev.architectury:architectury:${rootProject.architectury_version}")
+}

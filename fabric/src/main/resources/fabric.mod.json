@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "mc_fishing_pond",
+  "version": "${mod_version}",
+  "name": "MC Fishing Pond",
+  "description": "A fishing expansion mod for Minecraft.",
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "me.datsuns.fishingpond.fabric.FishingPondFabric"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.14.0",
+    "minecraft": "~1.21.4",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
