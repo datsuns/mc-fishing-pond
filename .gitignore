@@ -9,6 +9,7 @@ build/
 # Architectury Loom キャッシュ
 # ===========================
 .loom-cache/
+.architectury-transformer/
 **/remapped_mods/
 
 # ===========================
