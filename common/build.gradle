@@ -17,4 +17,11 @@ dependencies {
 
     // Architectury API common
     modImplementation("dev.architectury:architectury:${rootProject.architectury_version}")
+
+    // Testing
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
+}
+
+test {
+    useJUnitPlatform()
 }
