@@ -7,6 +7,7 @@ import dev.architectury.registry.ReloadListenerRegistry;
 import me.datsuns.fishingpond.data.FishingItemManager;
 import me.datsuns.fishingpond.loot.LootTableInjector;
 import me.datsuns.fishingpond.network.FishingPondNetworking;
+import me.datsuns.fishingpond.registry.ModItems;
 import me.datsuns.fishingpond.score.FishingScoreManager;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -24,6 +25,7 @@ public class FishingPond {
 
     public static void init() {
         LOGGER.info("[FishingPond] Initializing...");
+        ModItems.register();
         ReloadListenerRegistry.register(PackType.SERVER_DATA, new FishingItemManager(),
                 ResourceLocation.fromNamespaceAndPath(MOD_ID, "fishing_items"));
         LootTableInjector.register();

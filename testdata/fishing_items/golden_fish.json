@@ -1,6 +1,6 @@
 {
-    "item": "minecraft:gold_ingot",
-    "weight": 1000,
+    "weight": 10,
     "score": 50,
-    "display_name": "ゴールデンフィッシュ"
+    "display_name": "ゴールデンフィッシュ",
+    "item_model": "minecraft:item/gold_ingot"
 }

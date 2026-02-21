@@ -13,17 +13,19 @@ import java.util.Optional;
  * Definition of a custom fishing item loaded from a datapack JSON.
  */
 public record FishingItemDefinition(
-        ResourceLocation item,
+        Optional<ResourceLocation> item,
         int weight,
         int score,
         Optional<String> displayName,
+        Optional<ResourceLocation> itemModel,
         Optional<List<Holder<LootItemCondition>>> lootConditions
 ) {
     public static final Codec<FishingItemDefinition> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            ResourceLocation.CODEC.fieldOf("item").forGetter(FishingItemDefinition::item),
+            ResourceLocation.CODEC.optionalFieldOf("item").forGetter(FishingItemDefinition::item),
             Codec.INT.optionalFieldOf("weight", 1).forGetter(FishingItemDefinition::weight),
             Codec.INT.optionalFieldOf("score", 0).forGetter(FishingItemDefinition::score),
             Codec.STRING.optionalFieldOf("display_name").forGetter(FishingItemDefinition::displayName),
+            ResourceLocation.CODEC.optionalFieldOf("item_model").forGetter(FishingItemDefinition::itemModel),
             LootItemCondition.CODEC.listOf().optionalFieldOf("loot_conditions").forGetter(FishingItemDefinition::lootConditions)
     ).apply(instance, FishingItemDefinition::new));
 }

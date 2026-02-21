@@ -4,6 +4,7 @@ import me.datsuns.fishingpond.FishingPond;
 import me.datsuns.fishingpond.data.FishingItemDefinition;
 import me.datsuns.fishingpond.data.FishingItemManager;
 import me.datsuns.fishingpond.network.FishingPondNetworking;
+import me.datsuns.fishingpond.registry.ModItems;
 import me.datsuns.fishingpond.score.FishingScoreManager;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
@@ -55,17 +56,27 @@ public abstract class FishingHookMixin {
                     for (FishingItemDefinition def : customItems) {
                         current += def.weight();
                         if (roll < current) {
-                            Optional<Item> itemOpt = BuiltInRegistries.ITEM.getOptional(def.item());
-                            if (itemOpt.isPresent()) {
-                                loot.clear();
-                                ItemStack result = new ItemStack(itemOpt.get());
-                                // Apply custom name if present
-                                def.displayName().ifPresent(displayName -> {
-                                    result.set(DataComponents.CUSTOM_NAME, Component.literal(displayName));
-                                    FishingPond.LOGGER.info("[FishingPond] Mixin: applied custom name: {}", displayName);
-                                });
-                                loot.add(result);
-                                FishingPond.LOGGER.info("[FishingPond] Mixin successfully injected custom item: {}", def.item());
+                            Item item = def.item()
+                                    .flatMap(BuiltInRegistries.ITEM::getOptional)
+                                    .orElse(ModItems.FISH.get());
+
+                            loot.clear();
+                            ItemStack result = new ItemStack(item);
+                            
+                            // Apply custom name if present
+                            def.displayName().ifPresent(displayName -> {
+                                result.set(DataComponents.CUSTOM_NAME, Component.literal(displayName));
+                                FishingPond.LOGGER.info("[FishingPond] Mixin: applied custom name: {}", displayName);
+                            });
+
+                            // Apply custom model if present
+                            def.itemModel().ifPresent(modelRes -> {
+                                result.set(DataComponents.ITEM_MODEL, modelRes);
+                                FishingPond.LOGGER.info("[FishingPond] Mixin: applied custom model: {}", modelRes);
+                            });
+
+                            loot.add(result);
+                            FishingPond.LOGGER.info("[FishingPond] Mixin successfully injected custom item: {}", BuiltInRegistries.ITEM.getKey(item));
 
                                 // Award score
                                 if (def.score() > 0 && player instanceof ServerPlayer serverPlayer) {

@@ -4,6 +4,7 @@ import dev.architectury.event.events.common.LootEvent;
 import me.datsuns.fishingpond.FishingPond;
 import me.datsuns.fishingpond.data.FishingItemDefinition;
 import me.datsuns.fishingpond.data.FishingItemManager;
+import me.datsuns.fishingpond.registry.ModItems;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -51,15 +52,12 @@ public class LootTableInjector {
             FishingPond.LOGGER.info("[FishingPond] Injecting {} items into fishing pool", manager.getItems().size());
             for (Map.Entry<ResourceLocation, FishingItemDefinition> entry : manager.getItems().entrySet()) {
                 FishingItemDefinition definition = entry.getValue();
-                Optional<Item> itemOpt = BuiltInRegistries.ITEM.getOptional(definition.item());
+                Item item = definition.item()
+                        .flatMap(BuiltInRegistries.ITEM::getOptional)
+                        .orElse(ModItems.FISH.get());
 
-                if (itemOpt.isEmpty()) {
-                    FishingPond.LOGGER.warn("[FishingPond] Unknown item: {}", definition.item());
-                    continue;
-                }
-
-                FishingPond.LOGGER.info("[FishingPond]  -> Adding item: {} (weight: {})", definition.item(), definition.weight());
-                LootItem.Builder<?> lootEntry = LootItem.lootTableItem(itemOpt.get())
+                FishingPond.LOGGER.info("[FishingPond]  -> Adding item: {} (weight: {})", BuiltInRegistries.ITEM.getKey(item), definition.weight());
+                LootItem.Builder<?> lootEntry = LootItem.lootTableItem(item)
                         .setWeight(definition.weight());
 
                 poolBuilder.add(lootEntry);
