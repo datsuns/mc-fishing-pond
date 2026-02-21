@@ -10,6 +10,9 @@ license="MIT"
 A fishing expansion mod for Minecraft.
 """
 
+[[mixins]]
+config="mc_fishing_pond-common.mixins.json"
+
 [[dependencies.mc_fishing_pond]]
     modId="neoforge"
     type="required"

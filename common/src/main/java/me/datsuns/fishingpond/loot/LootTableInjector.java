@@ -23,16 +23,31 @@ public class LootTableInjector {
 
     public static void register() {
         LootEvent.MODIFY_LOOT_TABLE.register((id, context, builtin) -> {
+            // Debug log to see all tables being modified (limit to one namespace to avoid spam)
+            if (id.location().getNamespace().equals("minecraft")) {
+                // FishingPond.LOGGER.info("[FishingPond] Modifying table: {} (builtin: {})", id.location(), builtin);
+            }
+
             if (!builtin) return;
             if (!FISHING_TABLE.equals(id.location())) return;
 
+            FishingPond.LOGGER.info("[FishingPond] Detected fishing loot table modification request");
+
             FishingItemManager manager = FishingItemManager.getInstance();
-            if (manager == null || manager.getItems().isEmpty()) return;
+            if (manager == null) {
+                FishingPond.LOGGER.warn("[FishingPond] FishingItemManager is NULL during injection!");
+                return;
+            }
+            if (manager.getItems().isEmpty()) {
+                FishingPond.LOGGER.warn("[FishingPond] FishingItemManager has NO items during injection!");
+                return;
+            }
 
             LootPool.Builder poolBuilder = LootPool.lootPool()
                     .setRolls(ConstantValue.exactly(1));
 
             boolean hasEntries = false;
+            FishingPond.LOGGER.info("[FishingPond] Injecting {} items into fishing pool", manager.getItems().size());
             for (Map.Entry<ResourceLocation, FishingItemDefinition> entry : manager.getItems().entrySet()) {
                 FishingItemDefinition definition = entry.getValue();
                 Optional<Item> itemOpt = BuiltInRegistries.ITEM.getOptional(definition.item());
@@ -42,6 +57,7 @@ public class LootTableInjector {
                     continue;
                 }
 
+                FishingPond.LOGGER.info("[FishingPond]  -> Adding item: {} (weight: {})", definition.item(), definition.weight());
                 LootItem.Builder<?> lootEntry = LootItem.lootTableItem(itemOpt.get())
                         .setWeight(definition.weight());
 
@@ -51,7 +67,9 @@ public class LootTableInjector {
 
             if (hasEntries) {
                 context.addPool(poolBuilder);
-                FishingPond.LOGGER.info("[FishingPond] Injected {} custom item(s) into fishing loot table", manager.getItems().size());
+                FishingPond.LOGGER.info("[FishingPond] Successfully injected custom pool into fishing loot table");
+            } else {
+                FishingPond.LOGGER.warn("[FishingPond] No valid entries found to inject!");
             }
         });
     }

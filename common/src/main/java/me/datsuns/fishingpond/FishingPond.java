@@ -17,6 +17,6 @@ public class FishingPond {
         LOGGER.info("[FishingPond] Initializing...");
         ReloadListenerRegistry.register(PackType.SERVER_DATA, new FishingItemManager(),
                 ResourceLocation.fromNamespaceAndPath(MOD_ID, "fishing_items"));
-        LootTableInjector.register();
+        // LootTableInjector.register(); // Disabled in favor of FishingHookMixin for better compatibility and race-condition safety
     }
 }

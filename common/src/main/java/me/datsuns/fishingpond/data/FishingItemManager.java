@@ -36,6 +36,13 @@ public class FishingItemManager extends SimpleJsonResourceReloadListener<Fishing
     }
 
     @Override
+    protected Map<ResourceLocation, FishingItemDefinition> prepare(ResourceManager resourceManager, ProfilerFiller profiler) {
+        Map<ResourceLocation, FishingItemDefinition> prepared = super.prepare(resourceManager, profiler);
+        this.items = Map.copyOf(prepared);
+        return prepared;
+    }
+
+    @Override
     protected void apply(Map<ResourceLocation, FishingItemDefinition> object, ResourceManager resourceManager, ProfilerFiller profiler) {
         this.items = Map.copyOf(object);
         LOGGER.info("Loaded {} custom fishing items", this.items.size());
