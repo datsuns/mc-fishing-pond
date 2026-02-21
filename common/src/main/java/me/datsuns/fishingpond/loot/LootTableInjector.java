@@ -23,9 +23,9 @@ public class LootTableInjector {
 
     public static void register() {
         LootEvent.MODIFY_LOOT_TABLE.register((id, context, builtin) -> {
-            // Debug log to see all tables being modified (limit to one namespace to avoid spam)
+            // Explicitly log EVERYTHING from minecraft namespace to find the correct ID
             if (id.location().getNamespace().equals("minecraft")) {
-                // FishingPond.LOGGER.info("[FishingPond] Modifying table: {} (builtin: {})", id.location(), builtin);
+                FishingPond.LOGGER.info("[FishingPond] Modifying table: {} (builtin: {})", id.location(), builtin);
             }
 
             if (!builtin) return;
@@ -35,11 +35,12 @@ public class LootTableInjector {
 
             FishingItemManager manager = FishingItemManager.getInstance();
             if (manager == null) {
-                FishingPond.LOGGER.warn("[FishingPond] FishingItemManager is NULL during injection!");
+                FishingPond.LOGGER.warn("[FishingPond] FishingItemManager is NULL during injection! This should not happen.");
                 return;
             }
             if (manager.getItems().isEmpty()) {
-                FishingPond.LOGGER.warn("[FishingPond] FishingItemManager has NO items during injection!");
+                // If this happens on Fabric at startup, it's the race condition.
+                FishingPond.LOGGER.warn("[FishingPond] FishingItemManager is EMPTY during injection! If this is startup, try running /reload later.");
                 return;
             }
 

@@ -19,7 +19,7 @@ public class FishingItemManager extends SimpleJsonResourceReloadListener<Fishing
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String FOLDER_NAME = "fishing_items";
 
-    private Map<ResourceLocation, FishingItemDefinition> items = Collections.emptyMap();
+    private volatile Map<ResourceLocation, FishingItemDefinition> items = Collections.emptyMap();
     private static FishingItemManager instance;
 
     public FishingItemManager() {
@@ -32,13 +32,19 @@ public class FishingItemManager extends SimpleJsonResourceReloadListener<Fishing
     }
 
     public Map<ResourceLocation, FishingItemDefinition> getItems() {
+        if (items.isEmpty()) {
+            // Log this so we can see if it's called too early
+            // LOGGER.debug("FishingItemManager.getItems() called but map is empty.");
+        }
         return items;
     }
 
     @Override
     protected Map<ResourceLocation, FishingItemDefinition> prepare(ResourceManager resourceManager, ProfilerFiller profiler) {
+        LOGGER.info("[FishingPond] FishingItemManager: Preparing data...");
         Map<ResourceLocation, FishingItemDefinition> prepared = super.prepare(resourceManager, profiler);
         this.items = Map.copyOf(prepared);
+        LOGGER.info("[FishingPond] FishingItemManager: Prepared {} items in worker thread", this.items.size());
         return prepared;
     }
 

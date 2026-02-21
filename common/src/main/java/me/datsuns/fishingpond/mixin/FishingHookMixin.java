@@ -3,24 +3,28 @@ package me.datsuns.fishingpond.mixin;
 import me.datsuns.fishingpond.FishingPond;
 import me.datsuns.fishingpond.data.FishingItemDefinition;
 import me.datsuns.fishingpond.data.FishingItemManager;
+import me.datsuns.fishingpond.network.FishingPondNetworking;
+import me.datsuns.fishingpond.score.FishingScoreManager;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.LootTable;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Mixin(FishingHook.class)
@@ -28,64 +32,77 @@ public abstract class FishingHookMixin {
 
     @Shadow public abstract Player getPlayerOwner();
 
-    @Inject(
+    @Redirect(
             method = "retrieve",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/storage/loot/LootTable;getRandomItems(Lnet/minecraft/world/level/storage/loot/LootParams;)Lit/unimi/dsi/fastutil/objects/ObjectArrayList;"),
-            locals = LocalCapture.CAPTURE_FAILHARD
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/storage/loot/LootTable;getRandomItems(Lnet/minecraft/world/level/storage/loot/LootParams;)Lit/unimi/dsi/fastutil/objects/ObjectArrayList;")
     )
-    private void onGetRandomItems(ItemStack stack, CallbackInfoReturnable<Integer> cir, 
-                                  Player player, int i, LootParams lootParams, LootTable lootTable) {
-        // This is called just before getRandomItems. 
-        // We can't easily modify the return value of getRandomItems here without Redirect or ModifyVariable.
-        // But we can use the locals to get the LootParams.
-    }
-
-    @Inject(
-            method = "retrieve",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/advancements/critereon/FishingRodHookedTrigger;trigger(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/projectile/FishingHook;Ljava/util/Collection;)V"),
-            locals = LocalCapture.CAPTURE_FAILHARD
-    )
-    private void onTriggerFishingRodHooked(ItemStack stack, CallbackInfoReturnable<Integer> cir,
-                                           Player player, int i, LootParams lootParams, LootTable lootTable, List<ItemStack> loot) {
+    private ObjectArrayList<ItemStack> redirectGetRandomItems(LootTable instance, LootParams params) {
+        ObjectArrayList<ItemStack> loot = instance.getRandomItems(params);
+        
+        FishingPond.LOGGER.info("[FishingPond] Mixin: redirectGetRandomItems called. Vanilla loot size: {}", loot.size());
         
         FishingItemManager manager = FishingItemManager.getInstance();
-        if (manager == null || manager.getItems().isEmpty()) return;
+        if (manager != null && !manager.getItems().isEmpty()) {
+            List<FishingItemDefinition> customItems = new ArrayList<>(manager.getItems().values());
+            int totalWeight = customItems.stream().mapToInt(FishingItemDefinition::weight).sum();
+            
+            if (totalWeight > 0) {
+                Player player = this.getPlayerOwner();
+                // Vanilla total weight is approx 100 for fish.
+                int roll = player.getRandom().nextInt(totalWeight + 100);
+                if (roll < totalWeight) {
+                    int current = 0;
+                    for (FishingItemDefinition def : customItems) {
+                        current += def.weight();
+                        if (roll < current) {
+                            Optional<Item> itemOpt = BuiltInRegistries.ITEM.getOptional(def.item());
+                            if (itemOpt.isPresent()) {
+                                loot.clear();
+                                ItemStack result = new ItemStack(itemOpt.get());
+                                // Apply custom name if present
+                                def.displayName().ifPresent(displayName -> {
+                                    result.set(DataComponents.CUSTOM_NAME, Component.literal(displayName));
+                                    FishingPond.LOGGER.info("[FishingPond] Mixin: applied custom name: {}", displayName);
+                                });
+                                loot.add(result);
+                                FishingPond.LOGGER.info("[FishingPond] Mixin successfully injected custom item: {}", def.item());
 
-        FishingPond.LOGGER.info("[FishingPond] Manual loot injection via Mixin for player: {}", player.getName().getString());
-        
-        // Use a simple weighted selection or just add all for testing?
-        // Let's use the same logic as the loot pool: roll for each item based on its weight.
-        // But wait, the vanilla fishing loot table is a "pick one" from pools.
-        // To emulate "adding to the pool", we should combine the vanilla loot with our loot list and pick.
-        
-        // Actually, a simpler way is to roll our own pool here and add to the 'loot' list.
-        List<FishingItemDefinition> customItems = new ArrayList<>(manager.getItems().values());
-        int totalWeight = customItems.stream().mapToInt(FishingItemDefinition::weight).sum();
-        
-        // Note: Vanilla fishing has a total weight of ~100. If our item has weight 1000, it should be very likely.
-        // However, the vanilla loot is ALWAYS generated. 
-        // If we want to REPLACE or COMPETE with vanilla loot, we need a more complex Mixin.
-        // But the requirement says "ADD" to the vanilla loot table.
-        // In Datapack, adding a pool means we get one more roll.
-        
-        // Let's roll for one custom item if we are lucky.
-        // Or better: just roll from our collection.
-        if (totalWeight > 0) {
-            int roll = player.getRandom().nextInt(totalWeight + 100); // 100 is approx vanilla total weight
-            if (roll < totalWeight) {
-                int current = 0;
-                for (FishingItemDefinition def : customItems) {
-                    current += def.weight();
-                    if (roll < current) {
-                        Optional<Item> itemOpt = BuiltInRegistries.ITEM.getOptional(def.item());
-                        if (itemOpt.isPresent()) {
-                            loot.add(new ItemStack(itemOpt.get()));
-                            FishingPond.LOGGER.info("[FishingPond] Injected custom item: {}", def.item());
+                                // Award score
+                                if (def.score() > 0 && player instanceof ServerPlayer serverPlayer) {
+                                    FishingScoreManager scoreManager = FishingScoreManager.get(serverPlayer.serverLevel());
+                                    scoreManager.addScore(serverPlayer.getUUID(), def.score());
+                                    String playerName = serverPlayer.getName().getString();
+                                    int totalScore = scoreManager.getScore(serverPlayer.getUUID());
+                                    
+                                    // Sync to all players so everyone sees the updated scoreboard
+                                    for (ServerPlayer p : serverPlayer.getServer().getPlayerList().getPlayers()) {
+                                        FishingPondNetworking.sendScoreUpdate(p, serverPlayer.getUUID(), playerName, totalScore);
+                                    }
+                                    
+                                    FishingPond.LOGGER.info("[FishingPond] Added {} points to player: {}. Total: {}", def.score(), playerName, totalScore);
+                                }
+                            }
+                            break;
                         }
-                        break;
+                    }
+                } else {
+                    // Vanilla catch or failed roll - award 1 point for the HUD to show up
+                    if (this.getPlayerOwner() instanceof ServerPlayer serverPlayer) {
+                        FishingScoreManager scoreManager = FishingScoreManager.get(serverPlayer.serverLevel());
+                        scoreManager.addScore(serverPlayer.getUUID(), 1);
+                        String playerName = serverPlayer.getName().getString();
+                        int totalScore = scoreManager.getScore(serverPlayer.getUUID());
+                        for (ServerPlayer p : serverPlayer.getServer().getPlayerList().getPlayers()) {
+                            FishingPondNetworking.sendScoreUpdate(p, serverPlayer.getUUID(), playerName, totalScore);
+                        }
+                        FishingPond.LOGGER.info("[FishingPond] Added 1 point for vanilla catch. Total: {}", totalScore);
                     }
                 }
             }
+        } else {
+            FishingPond.LOGGER.warn("[FishingPond] Mixin: FishingItemManager is NULL or EMPTY during redirection.");
         }
+
+        return loot;
     }
 }

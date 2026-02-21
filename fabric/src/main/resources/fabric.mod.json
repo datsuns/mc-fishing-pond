@@ -9,6 +9,9 @@
   "entrypoints": {
     "main": [
       "me.datsuns.fishingpond.fabric.FishingPondFabric"
+    ],
+    "client": [
+      "me.datsuns.fishingpond.fabric.FishingPondFabricClient"
     ]
   },
   "depends": {

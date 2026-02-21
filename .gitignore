@@ -2,15 +2,18 @@
 # Gradle
 # ===========================
 .gradle/
+.gradle_home/
 build/
 !gradle/wrapper/gradle-wrapper.jar
 
 # ===========================
-# Architectury Loom キャッシュ
+# Architectury Loom / Forge / NeoForge
 # ===========================
 .loom-cache/
 .architectury-transformer/
 **/remapped_mods/
+.tmp/
+net/
 
 # ===========================
 # IDE - IntelliJ IDEA

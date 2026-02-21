@@ -9,5 +9,8 @@ public class FishingPondNeoForge {
 
     public FishingPondNeoForge(IEventBus modEventBus) {
         FishingPond.init();
+        if (net.neoforged.fml.loading.FMLEnvironment.dist == net.neoforged.api.distmarker.Dist.CLIENT) {
+            me.datsuns.fishingpond.client.ScoreboardHUD.register();
+        }
     }
 }
