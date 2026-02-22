@@ -10,6 +10,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.FishingHook;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
@@ -58,8 +59,9 @@ public abstract class FishingHookMixin {
                     current += def.weight();
                     if (roll < current) {
                         loot.clear();
-                        // 新規アイテムは Mod ID 固定
-                        ItemStack result = new ItemStack(ModItems.getFishItem());
+                        // 新規アイテムはバニラのレジストリから直接取得 (RegistrySupplierのMixinエラー回避のため)
+                        Item fishItem = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(FishingPond.MOD_ID, "fish"));
+                        ItemStack result = new ItemStack(fishItem);
                         
                         // 表示名の適用
                         def.displayName().ifPresent(name -> 
