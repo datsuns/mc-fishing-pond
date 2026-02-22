@@ -57,17 +57,19 @@ Modで定義したアイテムは、バニラの釣りルートテーブルに**
   "weight": 10,
   "score": 50,
   "display_name": "ゴールデンフィッシュ",
+  "texture": "mc_fishing_pond:item/golden_fish",
   "loot_conditions": []
 }
 ```
 
 | フィールド | 説明 |
 |-----------|------|
-| `item` | 釣れるアイテムのID |
+| `item` | 釣れるベースアイテムのID（省略時は Mod独自の `fish` が使用される） |
 | `weight` | 釣れやすさ（大きいほど出やすい） |
 | `score` | このアイテムを釣ったときの獲得点数 |
 | `display_name` | 表示名（任意） |
-| `loot_conditions` | 釣れる条件（バイオーム・時間帯など）。`[]` または省略で**制限なし（常に釣れる）** |
+| `texture` | アイテムの見た目（モデル/テクスチャ）を指定するID |
+| `loot_conditions` | 釣れる条件。`[]` または省略で制限なし |
 
 ---
 
@@ -80,8 +82,10 @@ Modで定義したアイテムは、バニラの釣りルートテーブルに**
 - プレイヤーごとに**累計スコア**を管理
 - スコアはサーバーデータ（または`playerdata`）に永続保存
 - 釣り上げた瞬間にアクションバー（画面下部のテキスト）で獲得点数を通知
-- OP向けのスコアリセットコマンドを提供
-  - 例: `/fishingpond score reset <player>` / `/fishingpond score reset all`
+- 管理者向けのコマンドを提供
+  - スコアリセット: `/fishingpond score reset <player>` / `/fishingpond score reset all`
+  - アイテム取得: `/fishingpond give <player> <item_id>`
+    - 例: `/fishingpond give @p golden_fish` （JSONのファイル名で指定可能）
 
 #### サーバー↔クライアント間のデータ同期
 
