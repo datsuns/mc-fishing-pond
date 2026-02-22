@@ -27,9 +27,13 @@ test {
 }
 
 sourceSets {
-    test {
+    main {
         resources {
             srcDir rootProject.file('testdata')
         }
     }
+}
+
+tasks.withType(AbstractArchiveTask).configureEach {
+    exclude 'data/mc_fishing_pond/fishing_items/**'
 }
