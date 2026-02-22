@@ -1,0 +1,7 @@
+{
+    "item": "minecraft:gold_ingot",
+    "weight": 10,
+    "score": 50,
+    "display_name": "NEW GOLDEN FISH",
+    "texture": "mc_fishing_pond:item/golden_fish"
+}
