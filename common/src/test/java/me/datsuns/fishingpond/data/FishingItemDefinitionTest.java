@@ -34,7 +34,7 @@ class FishingItemDefinitionTest {
         assertTrue(result.isSuccess(), () -> "Codec should succeed but got: " + result.error().map(e -> e.message()).orElse("unknown"));
 
         FishingItemDefinition def = result.getOrThrow();
-        assertEquals(ResourceLocation.parse("minecraft:gold_ingot"), def.item());
+        assertEquals(ResourceLocation.parse("minecraft:gold_ingot"), def.item().orElseThrow());
         assertEquals(10, def.weight());
         assertEquals(50, def.score());
         assertTrue(def.displayName().isEmpty());
@@ -52,8 +52,26 @@ class FishingItemDefinitionTest {
         assertTrue(result.isSuccess());
 
         FishingItemDefinition def = result.getOrThrow();
-        assertEquals(1, def.weight(), "Default weight should be 1");
+        assertEquals(ResourceLocation.parse("minecraft:emerald"), def.item().orElseThrow(), "Item resource location should match");
+        assertEquals(0, def.weight(), "Default weight should be 0");
         assertEquals(0, def.score(), "Default score should be 0");
+    }
+
+    @Test
+    void testTextureField() {
+        String json = """
+            {
+                "texture": "mc_fishing_pond:item/golden_fish",
+                "weight": 5
+            }
+            """;
+        var result = FishingItemDefinition.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString(json));
+        assertTrue(result.isSuccess());
+
+        FishingItemDefinition def = result.getOrThrow();
+        assertTrue(def.texture().isPresent());
+        assertEquals(ResourceLocation.parse("mc_fishing_pond:item/golden_fish"), def.texture().get());
+        assertEquals(5, def.weight());
     }
 
     @Test

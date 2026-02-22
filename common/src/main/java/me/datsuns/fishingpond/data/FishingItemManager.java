@@ -51,6 +51,21 @@ public class FishingItemManager extends SimpleJsonResourceReloadListener<Fishing
     @Override
     protected void apply(Map<ResourceLocation, FishingItemDefinition> object, ResourceManager resourceManager, ProfilerFiller profiler) {
         this.items = Map.copyOf(object);
-        LOGGER.info("Loaded {} custom fishing items", this.items.size());
+        LOGGER.info("[FishingPond] Loaded {} custom fishing definitions", this.items.size());
+        this.items.forEach((id, def) -> {
+            if (def.weight() > 0) {
+                String textureInfo = def.texture()
+                    .or(def::itemModel)
+                    .map(ResourceLocation::toString)
+                    .orElse("NONE");
+                LOGGER.info("[FishingPond]  - [NEW ITEM] {}: weight={}, score={}, texture={}, name={}", 
+                    id, def.weight(), def.score(), textureInfo, def.displayName().orElse("unnamed"));
+            } else if (def.item().isPresent()) {
+                LOGGER.info("[FishingPond]  - [VANILLA OVERRIDE] {}: target={}, score={}", 
+                    id, def.item().get(), def.score());
+            } else {
+                LOGGER.warn("[FishingPond]  - [UNKNOWN] {}: weight is 0 and no item specified", id);
+            }
+        });
     }
 }

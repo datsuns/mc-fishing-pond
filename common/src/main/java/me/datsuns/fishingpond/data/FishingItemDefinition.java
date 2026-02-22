@@ -18,14 +18,16 @@ public record FishingItemDefinition(
         int score,
         Optional<String> displayName,
         Optional<ResourceLocation> itemModel,
+        Optional<ResourceLocation> texture,
         Optional<List<Holder<LootItemCondition>>> lootConditions
 ) {
     public static final Codec<FishingItemDefinition> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            ResourceLocation.CODEC.optionalFieldOf("item").forGetter(FishingItemDefinition::item),
-            Codec.INT.optionalFieldOf("weight", 1).forGetter(FishingItemDefinition::weight),
+            Codec.STRING.optionalFieldOf("item").xmap(opt -> opt.map(ResourceLocation::parse), opt -> opt.map(ResourceLocation::toString)).forGetter(FishingItemDefinition::item),
+            Codec.INT.optionalFieldOf("weight", 0).forGetter(FishingItemDefinition::weight),
             Codec.INT.optionalFieldOf("score", 0).forGetter(FishingItemDefinition::score),
             Codec.STRING.optionalFieldOf("display_name").forGetter(FishingItemDefinition::displayName),
-            ResourceLocation.CODEC.optionalFieldOf("item_model").forGetter(FishingItemDefinition::itemModel),
+            Codec.STRING.optionalFieldOf("item_model").xmap(opt -> opt.map(ResourceLocation::parse), opt -> opt.map(ResourceLocation::toString)).forGetter(FishingItemDefinition::itemModel),
+            Codec.STRING.optionalFieldOf("texture").xmap(opt -> opt.map(ResourceLocation::parse), opt -> opt.map(ResourceLocation::toString)).forGetter(FishingItemDefinition::texture),
             LootItemCondition.CODEC.listOf().optionalFieldOf("loot_conditions").forGetter(FishingItemDefinition::lootConditions)
     ).apply(instance, FishingItemDefinition::new));
 }

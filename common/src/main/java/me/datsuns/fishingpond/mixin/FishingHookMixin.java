@@ -7,24 +7,21 @@ import me.datsuns.fishingpond.network.FishingPondNetworking;
 import me.datsuns.fishingpond.registry.ModItems;
 import me.datsuns.fishingpond.score.FishingScoreManager;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.FishingHook;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.resources.ResourceLocation;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,80 +37,85 @@ public abstract class FishingHookMixin {
     private ObjectArrayList<ItemStack> redirectGetRandomItems(LootTable instance, LootParams params) {
         ObjectArrayList<ItemStack> loot = instance.getRandomItems(params);
         
-        FishingPond.LOGGER.info("[FishingPond] Mixin: redirectGetRandomItems called. Vanilla loot size: {}", loot.size());
-        
         FishingItemManager manager = FishingItemManager.getInstance();
-        if (manager != null && !manager.getItems().isEmpty()) {
-            List<FishingItemDefinition> customItems = new ArrayList<>(manager.getItems().values());
-            int totalWeight = customItems.stream().mapToInt(FishingItemDefinition::weight).sum();
-            
-            if (totalWeight > 0) {
-                Player player = this.getPlayerOwner();
-                // Vanilla total weight is approx 100 for fish.
-                int roll = player.getRandom().nextInt(totalWeight + 100);
-                if (roll < totalWeight) {
-                    int current = 0;
-                    for (FishingItemDefinition def : customItems) {
-                        current += def.weight();
-                        if (roll < current) {
-                            Item item = def.item()
-                                    .flatMap(BuiltInRegistries.ITEM::getOptional)
-                                    .orElse(ModItems.FISH.get());
+        if (manager == null || manager.getItems().isEmpty()) {
+            return loot;
+        }
 
-                            loot.clear();
-                            ItemStack result = new ItemStack(item);
-                            
-                            // Apply custom name if present
-                            def.displayName().ifPresent(displayName -> {
-                                result.set(DataComponents.CUSTOM_NAME, Component.literal(displayName));
-                                FishingPond.LOGGER.info("[FishingPond] Mixin: applied custom name: {}", displayName);
-                            });
+        Player player = this.getPlayerOwner();
+        if (player == null) return loot;
 
-                            // Apply custom model if present
-                            def.itemModel().ifPresent(modelRes -> {
-                                result.set(DataComponents.ITEM_MODEL, modelRes);
-                                FishingPond.LOGGER.info("[FishingPond] Mixin: applied custom model: {}", modelRes);
-                            });
+        // 1. 新規アイテム定義（weight > 0）のみを抽出
+        List<FishingItemDefinition> customPool = manager.getItems().values().stream()
+                .filter(def -> def.weight() > 0)
+                .toList();
+        int totalCustomWeight = customPool.stream().mapToInt(FishingItemDefinition::weight).sum();
 
-                            loot.add(result);
-                            FishingPond.LOGGER.info("[FishingPond] Mixin successfully injected custom item: {}", BuiltInRegistries.ITEM.getKey(item));
+        // 2. 独自抽選 (バニラの重みを 約100 と仮定)
+        int roll = player.getRandom().nextInt(totalCustomWeight + 100);
+        
+        if (roll < totalCustomWeight) {
+            int current = 0;
+            for (FishingItemDefinition def : customPool) {
+                current += def.weight();
+                if (roll < current) {
+                    loot.clear();
+                    // 新規アイテムは Mod ID 固定
+                    ItemStack result = new ItemStack(ModItems.FISH.get());
+                    
+                    // 表示名の適用
+                    def.displayName().ifPresent(name -> 
+                        result.set(DataComponents.CUSTOM_NAME, Component.literal(name)));
 
-                                // Award score
-                                if (def.score() > 0 && player instanceof ServerPlayer serverPlayer) {
-                                    FishingScoreManager scoreManager = FishingScoreManager.get(serverPlayer.serverLevel());
-                                    scoreManager.addScore(serverPlayer.getUUID(), def.score());
-                                    String playerName = serverPlayer.getName().getString();
-                                    int totalScore = scoreManager.getScore(serverPlayer.getUUID());
-                                    
-                                    // Sync to all players so everyone sees the updated scoreboard
-                                    for (ServerPlayer p : serverPlayer.getServer().getPlayerList().getPlayers()) {
-                                        FishingPondNetworking.sendScoreUpdate(p, serverPlayer.getUUID(), playerName, totalScore);
-                                    }
-                                    
-                                    FishingPond.LOGGER.info("[FishingPond] Added {} points to player: {}. Total: {}", def.score(), playerName, totalScore);
-                                }
-                            }
-                            break;
-                        }
-                    }
-                } else {
-                    // Vanilla catch or failed roll - award 1 point for the HUD to show up
-                    if (this.getPlayerOwner() instanceof ServerPlayer serverPlayer) {
-                        FishingScoreManager scoreManager = FishingScoreManager.get(serverPlayer.serverLevel());
-                        scoreManager.addScore(serverPlayer.getUUID(), 1);
-                        String playerName = serverPlayer.getName().getString();
-                        int totalScore = scoreManager.getScore(serverPlayer.getUUID());
-                        for (ServerPlayer p : serverPlayer.getServer().getPlayerList().getPlayers()) {
-                            FishingPondNetworking.sendScoreUpdate(p, serverPlayer.getUUID(), playerName, totalScore);
-                        }
-                        FishingPond.LOGGER.info("[FishingPond] Added 1 point for vanilla catch. Total: {}", totalScore);
-                    }
+                    // テクスチャ/モデルの適用 (texture 優先)
+                    def.texture().or(def::itemModel).ifPresent(res -> 
+                        result.set(DataComponents.ITEM_MODEL, res));
+
+                    loot.add(result);
+                    FishingPond.LOGGER.info("[FishingPond] Custom item caught: {}", def.displayName().orElse("unnamed"));
+                    
+                    applyScore(player, def.score());
+                    return loot;
                 }
             }
-        } else {
-            FishingPond.LOGGER.warn("[FishingPond] Mixin: FishingItemManager is NULL or EMPTY during redirection.");
+        }
+
+        // 3. バニラ抽選の結果または未当選時の処理
+        if (!loot.isEmpty()) {
+            ItemStack vanillaStack = loot.get(0);
+            ResourceLocation vanillaId = BuiltInRegistries.ITEM.getKey(vanillaStack.getItem());
+            
+            // バニラアイテムへのスコア定義（weight <= 0 かつ item ID が一致）を検索
+            Optional<FishingItemDefinition> override = manager.getItems().values().stream()
+                    .filter(def -> def.weight() <= 0 && def.item().isPresent() && def.item().get().equals(vanillaId))
+                    .findFirst();
+
+            if (override.isPresent()) {
+                int score = override.get().score();
+                applyScore(player, score);
+                FishingPond.LOGGER.info("[FishingPond] Applying score override for {}: +{} points", vanillaId, score);
+            } else {
+                // 定義が見つからない場合（デバッグログ）
+                FishingPond.LOGGER.info("[FishingPond] No score definition found for vanilla item: {}", vanillaId);
+                // デフォルトとして 1 点付与
+                applyScore(player, 1);
+            }
         }
 
         return loot;
+    }
+
+    private void applyScore(Player player, int score) {
+        if (score > 0 && player instanceof ServerPlayer serverPlayer) {
+            FishingScoreManager scoreManager = FishingScoreManager.get(serverPlayer.serverLevel());
+            scoreManager.addScore(serverPlayer.getUUID(), score);
+            String playerName = serverPlayer.getName().getString();
+            int totalScore = scoreManager.getScore(serverPlayer.getUUID());
+            
+            for (ServerPlayer p : serverPlayer.getServer().getPlayerList().getPlayers()) {
+                FishingPondNetworking.sendScoreUpdate(p, serverPlayer.getUUID(), playerName, totalScore);
+            }
+            FishingPond.LOGGER.info("[FishingPond] Score update: {} gained {} points. Total: {}", playerName, score, totalScore);
+        }
     }
 }
