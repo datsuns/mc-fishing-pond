@@ -2,8 +2,8 @@
   "pack": {
     "pack_format": 46,
     "supported_formats": {
-      "min_inclusive": 46,
-      "max_inclusive": 48
+      "min_inclusive": 1,
+      "max_inclusive": 999
     },
     "description": "Fishing Pond Test Data"
   }
