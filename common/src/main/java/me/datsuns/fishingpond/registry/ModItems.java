@@ -14,6 +14,10 @@ public class ModItems {
     public static final RegistrySupplier<Item> FISH = ITEMS.register("fish", () -> 
             new Item(new Item.Properties().setId(ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(FishingPond.MOD_ID, "fish")))));
 
+    public static Item getFishItem() {
+        return FISH.get();
+    }
+
     public static void register() {
         ITEMS.register();
     }

@@ -61,7 +61,7 @@ public abstract class FishingHookMixin {
                 if (roll < current) {
                     loot.clear();
                     // 新規アイテムは Mod ID 固定
-                    ItemStack result = new ItemStack(ModItems.FISH.get());
+                    ItemStack result = new ItemStack(ModItems.getFishItem());
                     
                     // 表示名の適用
                     def.displayName().ifPresent(name -> 
