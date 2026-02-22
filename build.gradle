@@ -21,6 +21,14 @@ subprojects {
 
     group = rootProject.maven_group
     version = rootProject.mod_version
+    
+    // Explicitly define the base name.
+    base.archivesName = "${rootProject.archives_base_name}-${project.version}-mc${rootProject.minecraft_version}-${project.name}"
+    
+    // We clear the version for the archive tasks so Gradle doesn't append it again at the very end
+    tasks.withType(AbstractArchiveTask).configureEach {
+        archiveVersion.set("")
+    }
 
     repositories {
         maven { url 'https://maven.neoforged.net/releases' }
