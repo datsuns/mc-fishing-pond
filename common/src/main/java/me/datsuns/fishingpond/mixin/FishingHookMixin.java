@@ -36,46 +36,45 @@ public abstract class FishingHookMixin {
     )
     private ObjectArrayList<ItemStack> redirectGetRandomItems(LootTable instance, LootParams params) {
         ObjectArrayList<ItemStack> loot = instance.getRandomItems(params);
-        
-        FishingItemManager manager = FishingItemManager.getInstance();
-        if (manager == null || manager.getItems().isEmpty()) {
-            return loot;
-        }
-
         Player player = this.getPlayerOwner();
         if (player == null) return loot;
-
-        // 1. 新規アイテム定義（weight > 0）のみを抽出
-        List<FishingItemDefinition> customPool = manager.getItems().values().stream()
-                .filter(def -> def.weight() > 0)
-                .toList();
-        int totalCustomWeight = customPool.stream().mapToInt(FishingItemDefinition::weight).sum();
-
-        // 2. 独自抽選 (バニラの重みを 約100 と仮定)
-        int roll = player.getRandom().nextInt(totalCustomWeight + 100);
         
-        if (roll < totalCustomWeight) {
-            int current = 0;
-            for (FishingItemDefinition def : customPool) {
-                current += def.weight();
-                if (roll < current) {
-                    loot.clear();
-                    // 新規アイテムは Mod ID 固定
-                    ItemStack result = new ItemStack(ModItems.getFishItem());
-                    
-                    // 表示名の適用
-                    def.displayName().ifPresent(name -> 
-                        result.set(DataComponents.CUSTOM_NAME, Component.literal(name)));
+        FishingItemManager manager = FishingItemManager.getInstance();
+        boolean hasCustomItems = manager != null && !manager.getItems().isEmpty();
 
-                    // テクスチャ/モデルの適用 (texture 優先)
-                    def.texture().or(def::itemModel).ifPresent(res -> 
-                        result.set(DataComponents.ITEM_MODEL, res));
+        if (hasCustomItems) {
+            // 1. 新規アイテム定義（weight > 0）のみを抽出
+            List<FishingItemDefinition> customPool = manager.getItems().values().stream()
+                    .filter(def -> def.weight() > 0)
+                    .toList();
+            int totalCustomWeight = customPool.stream().mapToInt(FishingItemDefinition::weight).sum();
 
-                    loot.add(result);
-                    FishingPond.LOGGER.info("[FishingPond] Custom item caught: {}", def.displayName().orElse("unnamed"));
-                    
-                    applyScore(player, def.score());
-                    return loot;
+            // 2. 独自抽選 (バニラの重みを 約100 と仮定)
+            int roll = player.getRandom().nextInt(totalCustomWeight + 100);
+            
+            if (roll < totalCustomWeight) {
+                int current = 0;
+                for (FishingItemDefinition def : customPool) {
+                    current += def.weight();
+                    if (roll < current) {
+                        loot.clear();
+                        // 新規アイテムは Mod ID 固定
+                        ItemStack result = new ItemStack(ModItems.getFishItem());
+                        
+                        // 表示名の適用
+                        def.displayName().ifPresent(name -> 
+                            result.set(DataComponents.CUSTOM_NAME, Component.literal(name)));
+
+                        // テクスチャ/モデルの適用 (texture 優先)
+                        def.texture().or(def::itemModel).ifPresent(res -> 
+                            result.set(DataComponents.ITEM_MODEL, res));
+
+                        loot.add(result);
+                        FishingPond.LOGGER.info("[FishingPond] Custom item caught: {}", def.displayName().orElse("unnamed"));
+                        
+                        applyScore(player, def.score());
+                        return loot;
+                    }
                 }
             }
         }
@@ -86,9 +85,12 @@ public abstract class FishingHookMixin {
             Identifier vanillaId = BuiltInRegistries.ITEM.getKey(vanillaStack.getItem());
             
             // バニラアイテムへのスコア定義（weight <= 0 かつ item ID が一致）を検索
-            Optional<FishingItemDefinition> override = manager.getItems().values().stream()
-                    .filter(def -> def.weight() <= 0 && def.item().isPresent() && def.item().get().equals(vanillaId))
-                    .findFirst();
+            Optional<FishingItemDefinition> override = Optional.empty();
+            if (hasCustomItems) {
+                override = manager.getItems().values().stream()
+                        .filter(def -> def.weight() <= 0 && def.item().isPresent() && def.item().get().equals(vanillaId))
+                        .findFirst();
+            }
 
             if (override.isPresent()) {
                 int score = override.get().score();
@@ -96,7 +98,7 @@ public abstract class FishingHookMixin {
                 FishingPond.LOGGER.info("[FishingPond] Applying score override for {}: +{} points", vanillaId, score);
             } else {
                 // 定義が見つからない場合（デバッグログ）
-                FishingPond.LOGGER.info("[FishingPond] No score definition found for vanilla item: {}", vanillaId);
+                FishingPond.LOGGER.info("[FishingPond] No score definition found/loaded for vanilla item: {}", vanillaId);
                 // デフォルトとして 1 点付与
                 applyScore(player, 1);
             }
