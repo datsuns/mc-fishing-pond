@@ -26,4 +26,14 @@ test {
     useJUnitPlatform()
 }
 
+if (project.hasProperty('useTestData')) {
+    sourceSets {
+        main {
+            resources {
+                srcDir rootProject.file('testdata')
+            }
+        }
+    }
+}
+
 

@@ -70,13 +70,5 @@ components.java {
 
 loom {
     
-    runs {
-        client {
-            client()
-            setConfigName('Fabric Client')
-            ideConfigGenerated(true)
-            runDir('run')
-            programArgs('--extraDatapacks', project.file('../testdata').getAbsolutePath())
-        }
-    }
+
 }

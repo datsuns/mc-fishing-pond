@@ -69,13 +69,5 @@ components.java {
 
 loom {
     
-    runs {
-        client {
-            client()
-            setConfigName('NeoForge Client')
-            ideConfigGenerated(true)
-            runDir('run')
-            programArgs('--extraDatapacks', project.file('../testdata').getAbsolutePath())
-        }
-    }
+
 }
