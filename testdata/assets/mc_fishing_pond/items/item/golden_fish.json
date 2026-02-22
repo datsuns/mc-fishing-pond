@@ -1,0 +1,9 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "minecraft:item/generated",
+    "textures": {
+      "layer0": "mc_fishing_pond:item/golden_fish"
+    }
+  }
+}
