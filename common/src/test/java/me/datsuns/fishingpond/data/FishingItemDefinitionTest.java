@@ -3,7 +3,7 @@ package me.datsuns.fishingpond.data;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.datafix.DataFixers;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
@@ -16,7 +16,7 @@ class FishingItemDefinitionTest {
 
     @BeforeAll
     static void bootstrap() {
-        // Minecraft needs its registries initialized before we can use ResourceLocation/CODEC
+        // Minecraft needs its registries initialized before we can use Identifier/CODEC
         net.minecraft.SharedConstants.tryDetectVersion();
         net.minecraft.server.Bootstrap.bootStrap();
     }
@@ -34,7 +34,7 @@ class FishingItemDefinitionTest {
         assertTrue(result.isSuccess(), () -> "Codec should succeed but got: " + result.error().map(e -> e.message()).orElse("unknown"));
 
         FishingItemDefinition def = result.getOrThrow();
-        assertEquals(ResourceLocation.parse("minecraft:gold_ingot"), def.item().orElseThrow());
+        assertEquals(Identifier.parse("minecraft:gold_ingot"), def.item().orElseThrow());
         assertEquals(10, def.weight());
         assertEquals(50, def.score());
         assertTrue(def.displayName().isEmpty());
@@ -52,7 +52,7 @@ class FishingItemDefinitionTest {
         assertTrue(result.isSuccess());
 
         FishingItemDefinition def = result.getOrThrow();
-        assertEquals(ResourceLocation.parse("minecraft:emerald"), def.item().orElseThrow(), "Item resource location should match");
+        assertEquals(Identifier.parse("minecraft:emerald"), def.item().orElseThrow(), "Item identifier should match");
         assertEquals(0, def.weight(), "Default weight should be 0");
         assertEquals(0, def.score(), "Default score should be 0");
     }
@@ -70,7 +70,7 @@ class FishingItemDefinitionTest {
 
         FishingItemDefinition def = result.getOrThrow();
         assertTrue(def.texture().isPresent());
-        assertEquals(ResourceLocation.parse("mc_fishing_pond:item/golden_fish"), def.texture().get());
+        assertEquals(Identifier.parse("mc_fishing_pond:item/golden_fish"), def.texture().get());
         assertEquals(5, def.weight());
     }
 

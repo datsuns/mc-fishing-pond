@@ -15,7 +15,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.LootTable;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -83,7 +83,7 @@ public abstract class FishingHookMixin {
         // 3. バニラ抽選の結果または未当選時の処理
         if (!loot.isEmpty()) {
             ItemStack vanillaStack = loot.get(0);
-            ResourceLocation vanillaId = BuiltInRegistries.ITEM.getKey(vanillaStack.getItem());
+            Identifier vanillaId = BuiltInRegistries.ITEM.getKey(vanillaStack.getItem());
             
             // バニラアイテムへのスコア定義（weight <= 0 かつ item ID が一致）を検索
             Optional<FishingItemDefinition> override = manager.getItems().values().stream()
@@ -107,12 +107,12 @@ public abstract class FishingHookMixin {
 
     private void applyScore(Player player, int score) {
         if (score > 0 && player instanceof ServerPlayer serverPlayer) {
-            FishingScoreManager scoreManager = FishingScoreManager.get(serverPlayer.serverLevel());
+            FishingScoreManager scoreManager = FishingScoreManager.get((net.minecraft.server.level.ServerLevel) serverPlayer.level());
             scoreManager.addScore(serverPlayer.getUUID(), score);
             String playerName = serverPlayer.getName().getString();
             int totalScore = scoreManager.getScore(serverPlayer.getUUID());
             
-            for (ServerPlayer p : serverPlayer.getServer().getPlayerList().getPlayers()) {
+            for (ServerPlayer p : serverPlayer.level().getServer().getPlayerList().getPlayers()) {
                 FishingPondNetworking.sendScoreUpdate(p, serverPlayer.getUUID(), playerName, totalScore);
             }
             FishingPond.LOGGER.info("[FishingPond] Score update: {} gained {} points. Total: {}", playerName, score, totalScore);

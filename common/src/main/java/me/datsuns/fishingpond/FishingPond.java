@@ -13,12 +13,13 @@ import me.datsuns.fishingpond.score.FishingScoreManager;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,17 +33,17 @@ public class FishingPond {
         LOGGER.info("[FishingPond] Initializing...");
         ModItems.register();
         ReloadListenerRegistry.register(PackType.SERVER_DATA, new FishingItemManager(),
-                ResourceLocation.fromNamespaceAndPath(MOD_ID, "fishing_items"));
+                Identifier.fromNamespaceAndPath(MOD_ID, "fishing_items"));
         LootTableInjector.register();
         FishingPondNetworking.register();
 
         dev.architectury.event.events.common.PlayerEvent.PLAYER_JOIN.register(player -> {
             // Sync all scores to the joining player
-            FishingScoreManager scoreManager = FishingScoreManager.get(player.serverLevel());
+            FishingScoreManager scoreManager = FishingScoreManager.get((ServerLevel) player.level());
             scoreManager.getAllScores().forEach((uuid, score) -> {
                 // Try to get the name from the server's player list
                 String name = "Unknown";
-                net.minecraft.server.level.ServerPlayer targetPlayer = player.getServer().getPlayerList().getPlayer(uuid);
+                net.minecraft.server.level.ServerPlayer targetPlayer = player.level().getServer().getPlayerList().getPlayer(uuid);
                 if (targetPlayer != null) {
                     name = targetPlayer.getName().getString();
                 }
@@ -62,7 +63,7 @@ public class FishingPond {
                                 .then(Commands.argument("player", EntityArgument.player())
                                         .executes(context -> {
                                             ServerPlayer player = EntityArgument.getPlayer(context, "player");
-                                            FishingScoreManager manager = FishingScoreManager.get(player.serverLevel());
+                                            FishingScoreManager manager = FishingScoreManager.get((ServerLevel) player.level());
                                             manager.setScore(player.getUUID(), 0);
                                             FishingPondNetworking.sendScoreUpdate(player, player.getUUID(), player.getName().getString(), 0);
                                             context.getSource().sendSuccess(() -> net.minecraft.network.chat.Component.literal("Reset score for " + player.getName().getString()), true);
@@ -74,7 +75,7 @@ public class FishingPond {
                                                 .executes(context -> {
                                                     ServerPlayer player = EntityArgument.getPlayer(context, "player");
                                                     int amount = IntegerArgumentType.getInteger(context, "amount");
-                                                    FishingScoreManager manager = FishingScoreManager.get(player.serverLevel());
+                                                    FishingScoreManager manager = FishingScoreManager.get((ServerLevel) player.level());
                                                     manager.addScore(player.getUUID(), amount);
                                                     int newScore = manager.getScore(player.getUUID());
                                                     FishingPondNetworking.sendScoreUpdate(player, player.getUUID(), player.getName().getString(), newScore);
@@ -82,16 +83,16 @@ public class FishingPond {
                                                     return 1;
                                                 })))))
                 .then(Commands.literal("give")
-                        .requires(source -> source.hasPermission(2))
+                        .requires(source -> source.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER))
                         .then(Commands.argument("player", EntityArgument.player())
-                                .then(Commands.argument("item_id", ResourceLocationArgument.id())
+                                .then(Commands.argument("item_id", IdentifierArgument.id())
                                         .suggests((context, builder) -> {
                                             FishingItemManager.getInstance().getItems().keySet().forEach(id -> builder.suggest(id.toString()));
                                             return builder.buildFuture();
                                         })
                                         .executes(context -> {
                                             ServerPlayer player = EntityArgument.getPlayer(context, "player");
-                                            ResourceLocation itemId = ResourceLocationArgument.getId(context, "item_id");
+                                            Identifier itemId = IdentifierArgument.getId(context, "item_id");
                                             
                                             FishingItemDefinition def = FishingItemManager.getInstance().getItems().get(itemId);
                                             if (def == null) {
@@ -104,8 +105,8 @@ public class FishingPond {
                                             if (def.weight() > 0 || def.item().isEmpty()) {
                                                 stack = new ItemStack(ModItems.FISH.get());
                                             } else {
-                                                var itemOpt = net.minecraft.core.registries.BuiltInRegistries.ITEM.getOptional(def.item().get());
-                                                if (itemOpt.isPresent()) {
+                                                var itemOpt = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(def.item().get());
+                                                if (itemOpt != null && itemOpt.isPresent()) {
                                                     stack = new ItemStack(itemOpt.get());
                                                 } else {
                                                     context.getSource().sendFailure(Component.literal("Base item not found: " + def.item().get()));

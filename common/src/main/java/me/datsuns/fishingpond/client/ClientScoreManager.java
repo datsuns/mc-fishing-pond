@@ -11,6 +11,7 @@ public class ClientScoreManager {
     public static void updateScore(UUID uuid, String name, int score) {
         SCORES.put(uuid, score);
         NAMES.put(uuid, name);
+        me.datsuns.fishingpond.FishingPond.LOGGER.info("[FishingPond] Client received score update: {} ({}) = {}", name, uuid, score);
     }
 
     public static String getName(UUID uuid) {

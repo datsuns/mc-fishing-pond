@@ -5,10 +5,9 @@ import me.datsuns.fishingpond.client.ClientScoreManager;
 
 public class FishingPondNetworking {
     public static void register() {
-        // Register the S2C packet
         NetworkManager.registerReceiver(NetworkManager.s2c(), ScoreSyncPacket.TYPE, ScoreSyncPacket.CODEC, (payload, context) -> {
             context.queue(() -> {
-                ClientScoreManager.updateScore(payload.playerUuid(), payload.playerName(), payload.score());
+                me.datsuns.fishingpond.client.ClientScoreManager.updateScore(payload.playerUuid(), payload.playerName(), payload.score());
             });
         });
     }

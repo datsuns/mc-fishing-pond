@@ -33,13 +33,13 @@ public class ScoreboardHUD {
         List<Map.Entry<UUID, Integer>> sortedScores = new ArrayList<>(scores.entrySet());
         sortedScores.sort((a, b) -> b.getValue().compareTo(a.getValue()));
 
-        graphics.drawString(font, Component.literal("§6--- Fishing Stats ---"), x - font.width("--- Fishing Stats ---"), y, 0xFFFFFF, true);
+        graphics.drawString(font, Component.literal("§6--- Fishing Stats ---"), x - font.width("--- Fishing Stats ---"), y, 0xFFFFFFFF, true);
         y += 12;
 
         for (Map.Entry<UUID, Integer> entry : sortedScores) {
             String name = ClientScoreManager.getName(entry.getKey());
             String text = name + ": " + entry.getValue();
-            graphics.drawString(font, Component.literal(text), x - font.width(text), y, 0xFFFFFF, true);
+            graphics.drawString(font, Component.literal(text), x - font.width(text), y, 0xFFFFFFFF, true);
             y += 10;
         }
     }
