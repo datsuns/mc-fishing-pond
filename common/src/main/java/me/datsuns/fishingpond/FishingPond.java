@@ -59,6 +59,7 @@ public class FishingPond {
     private static void registerCommands(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("fishingpond")
                 .then(Commands.literal("score")
+                        .requires(source -> source.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER))
                         .then(Commands.literal("reset")
                                 .then(Commands.argument("player", EntityArgument.player())
                                         .executes(context -> {
@@ -68,7 +69,9 @@ public class FishingPond {
                                             FishingPondNetworking.sendScoreUpdate(player, player.getUUID(), player.getName().getString(), 0);
                                             context.getSource().sendSuccess(() -> net.minecraft.network.chat.Component.literal("Reset score for " + player.getName().getString()), true);
                                             return 1;
-                                        })))
+                                        })
+                                )
+                        )
                         .then(Commands.literal("add")
                                 .then(Commands.argument("player", EntityArgument.player())
                                         .then(Commands.argument("amount", IntegerArgumentType.integer())
@@ -81,7 +84,11 @@ public class FishingPond {
                                                     FishingPondNetworking.sendScoreUpdate(player, player.getUUID(), player.getName().getString(), newScore);
                                                     context.getSource().sendSuccess(() -> net.minecraft.network.chat.Component.literal("Added " + amount + " to " + player.getName().getString() + ". New score: " + newScore), true);
                                                     return 1;
-                                                })))))
+                                                })
+                                        )
+                                )
+                        )
+                )
                 .then(Commands.literal("give")
                         .requires(source -> source.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER))
                         .then(Commands.argument("player", EntityArgument.player())
@@ -125,6 +132,10 @@ public class FishingPond {
                                                 context.getSource().sendFailure(Component.literal("Player inventory is full"));
                                                 return 0;
                                             }
-                                        })))));
+                                        })
+                                )
+                        )
+                )
+        );
     }
 }
