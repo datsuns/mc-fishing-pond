@@ -101,8 +101,8 @@ public abstract class FishingHookMixin {
             } else {
                 // 定義が見つからない場合（デバッグログ）
                 FishingPond.LOGGER.info("[FishingPond] No score definition found/loaded for vanilla item: {}", vanillaId);
-                // デフォルトとして 1 点付与
-                applyScore(player, 1);
+                // デフォルトとして 0 点（加算なし）にする
+                applyScore(player, 0);
             }
         }
 
