@@ -75,12 +75,6 @@ public abstract class FishingHookMixin {
                             if (path.startsWith("item/")) {
                                 path = path.substring(5);
                             }
-                            net.minecraft.resources.ResourceKey<net.minecraft.client.renderer.item.ItemModel.Unbaked> fakeKey = 
-                                net.minecraft.resources.ResourceKey.create(
-                                    net.minecraft.core.registries.Registries.ITEM_MODEL, 
-                                    Identifier.fromNamespaceAndPath(res.getNamespace(), path)
-                                );
-                            // Or simply setting it as Identifier (since the component accepts Identifier)
                             result.set(DataComponents.ITEM_MODEL, Identifier.fromNamespaceAndPath(res.getNamespace(), path));
                         });
 
