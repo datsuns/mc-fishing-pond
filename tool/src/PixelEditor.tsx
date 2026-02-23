@@ -21,7 +21,6 @@ export function PixelEditor({ initialTextureUrl, onChange }: PixelEditorProps) {
 
     const [grid, setGrid] = useState<GridData>(createEmptyGrid());
     const [color, setColor] = useState<string>('#000000');
-    const [isDrawing, setIsDrawing] = useState(false);
     const [mode, setMode] = useState<'draw' | 'erase'>('draw');
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -90,20 +89,15 @@ export function PixelEditor({ initialTextureUrl, onChange }: PixelEditorProps) {
     }, [grid]);
 
     const handlePointerDown = (x: number, y: number, e: React.PointerEvent) => {
-        setIsDrawing(true);
-        e.currentTarget.setPointerCapture(e.pointerId);
         updateCell(x, y, e.button === 2 || mode === 'erase'); // Right click forces erase
     };
 
-    const handlePointerMove = (x: number, y: number, e: React.PointerEvent) => {
-        if (isDrawing) {
-            updateCell(x, y, e.buttons === 2 || mode === 'erase');
+    const handlePointerEnter = (x: number, y: number, e: React.PointerEvent) => {
+        if (e.buttons === 1) { // Left click drag
+            updateCell(x, y, mode === 'erase');
+        } else if (e.buttons === 2) { // Right click drag
+            updateCell(x, y, true);
         }
-    };
-
-    const handlePointerUp = (e: React.PointerEvent) => {
-        setIsDrawing(false);
-        e.currentTarget.releasePointerCapture(e.pointerId);
     };
 
     const updateCell = (x: number, y: number, overwriteErase: boolean) => {
@@ -147,8 +141,7 @@ export function PixelEditor({ initialTextureUrl, onChange }: PixelEditorProps) {
                                 className="w-full h-full border-[0.5px] border-white/5"
                                 style={{ backgroundColor: cellColor || 'transparent' }}
                                 onPointerDown={(e) => handlePointerDown(x, y, e)}
-                                onPointerMove={(e) => handlePointerMove(x, y, e)}
-                                onPointerUp={handlePointerUp}
+                                onPointerEnter={(e) => handlePointerEnter(x, y, e)}
                             />
                         ))
                     ))}
