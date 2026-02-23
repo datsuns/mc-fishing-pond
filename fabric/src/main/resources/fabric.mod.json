@@ -5,6 +5,7 @@
   "name": "MC Fishing Pond",
   "description": "A fishing expansion mod for Minecraft.",
   "license": "MIT",
+  "icon": "icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [

@@ -6,6 +6,7 @@ license="MIT"
     modId="mc_fishing_pond"
     version="${mod_version}"
     displayName="MC Fishing Pond"
+    logoFile="icon.png"
     description="""
 A fishing expansion mod for Minecraft.
 """
