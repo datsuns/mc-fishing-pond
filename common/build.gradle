@@ -30,7 +30,8 @@ if (project.hasProperty('useTestData')) {
     sourceSets {
         main {
             resources {
-                srcDir rootProject.file('testdata')
+                srcDir rootProject.file('testdata/resourcepack')
+                srcDir rootProject.file('testdata/datapack')
             }
         }
     }

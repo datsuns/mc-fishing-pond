@@ -32,7 +32,8 @@ dependencies {
     common(project(path: ':common', configuration: 'namedElements')) { transitive false }
     shadowCommon(project(path: ':common', configuration: 'transformProductionNeoForge')) { transitive false }
 
-    runtimeOnly files("../testdata")
+    runtimeOnly files("../testdata/resourcepack")
+    runtimeOnly files("../testdata/datapack")
 }
 
 processResources {
