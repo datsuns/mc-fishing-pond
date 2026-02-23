@@ -2,7 +2,8 @@
 
 ## modの説明
 
-![ss_mod_jp](./images/ss_play_image_jp.png)
+![ss_mod_jp_server](./images/ss_play_image_server.png)
+![ss_mod_jp_client](./images/ss_play_image_client.png)
 
 釣りアイテムの追加とスコア計算ができるmodです。追加アイテムを生成するツール「**MC Fishing Pond Studio**」もあります。
 スコアはワールドに参加しているプレイヤー全員に共有されます。
@@ -40,7 +41,8 @@
 
 ## Mod Description
 
-![ss_mod_en](./images/ss_play_image_en.png)
+![ss_mod_jp_server](./images/ss_play_image_server.png)
+![ss_mod_jp_client](./images/ss_play_image_client.png)
 
 This is a mod that allows you to add custom fishing items and calculate scores. It includes a dedicated tool called "**MC Fishing Pond Studio**" to generate these additional items.
 Scores are shared with all players participating in the world.
