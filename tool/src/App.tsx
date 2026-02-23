@@ -3,6 +3,7 @@ import { Download, Upload, Plus, Trash2, Globe, FileBox } from 'lucide-react';
 import { open, message } from '@tauri-apps/plugin-dialog';
 import { readTextFile, writeTextFile, writeFile, mkdir, exists, readDir } from '@tauri-apps/plugin-fs';
 import { convertFileSrc } from '@tauri-apps/api/core';
+import { PixelEditor } from './PixelEditor';
 import './App.css';
 
 // Mock data types
@@ -14,6 +15,7 @@ interface CustomItem {
   score: number;
   texture?: string; // object URL for preview
   isManualId: boolean;
+  _isDrawMode?: boolean; // Whether the item is currently using the pixel editor
 }
 
 function App() {
@@ -362,37 +364,62 @@ function App() {
 
                   {/* Texture Area */}
                   <div className="space-y-1.5 focus-within:ring-1 focus-within:ring-blue-500 rounded-lg">
-                    <label className="text-sm font-medium text-gray-400 mb-1.5 block">{t.texture}</label>
-                    <div className="w-full border-2 border-dashed border-gray-700 hover:border-blue-500/50 rounded-lg p-8 bg-[#181818] transition-colors cursor-pointer flex flex-col items-center justify-center group relative overflow-hidden">
-                      {selectedItem.texture ? (
-                        <div className="relative w-32 h-32 flex items-center justify-center">
-                          <img src={selectedItem.texture} className="max-w-full max-h-full render-pixelated scale-[4]" alt="Texture preview" />
-                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded">
-                            <Upload className="text-white w-8 h-8" />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-center">
-                          <Upload className="w-10 h-10 text-gray-500 mx-auto mb-3 group-hover:text-blue-400 transition-colors" />
-                          <p className="text-sm text-gray-400 group-hover:text-gray-300">{t.textureHint}</p>
-                        </div>
-                      )}
-                      {/* Invisible file input covering the whole area */}
-                      <input
-                        type="file"
-                        accept="image/png"
-                        title=""
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        onChange={async (e) => {
-                          if (e.target.files && e.target.files[0]) {
-                            // For a desktop app, we could store the actual arrayBuffer if needed for export,
-                            // but saving an object URL works for previewing. We will need the file path for Export later.
-                            const url = URL.createObjectURL(e.target.files[0]);
-                            updateItem({ texture: url });
-                          }
-                        }}
-                      />
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-sm font-medium text-gray-400">{t.texture}</label>
+                      <div className="flex bg-[#1e1e1e] p-1 rounded-lg border border-gray-700">
+                        <button
+                          onClick={() => {
+                            // Toggle to build-in editor. If they toggle, we don't clear the texture, we just let PixelEditor load it.
+                            updateItem({ ...selectedItem, _isDrawMode: true } as any);
+                          }}
+                          className={`px-3 py-1 text-xs font-medium rounded transition-colors ${selectedItem['_isDrawMode' as keyof typeof selectedItem] ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-300'}`}
+                        >
+                          Draw
+                        </button>
+                        <button
+                          onClick={() => updateItem({ ...selectedItem, _isDrawMode: false } as any)}
+                          className={`px-3 py-1 text-xs font-medium rounded transition-colors ${!selectedItem['_isDrawMode' as keyof typeof selectedItem] ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-300'}`}
+                        >
+                          Upload
+                        </button>
+                      </div>
                     </div>
+
+                    {selectedItem['_isDrawMode' as keyof typeof selectedItem] ? (
+                      <PixelEditor
+                        initialTextureUrl={selectedItem.texture}
+                        onChange={(url) => updateItem({ texture: url })}
+                      />
+                    ) : (
+                      <div className="w-full border-2 border-dashed border-gray-700 hover:border-blue-500/50 rounded-lg p-8 bg-[#181818] transition-colors cursor-pointer flex flex-col items-center justify-center group relative overflow-hidden">
+                        {selectedItem.texture ? (
+                          <div className="relative w-32 h-32 flex items-center justify-center">
+                            <img src={selectedItem.texture} className="max-w-full max-h-full render-pixelated scale-[4]" alt="Texture preview" />
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded">
+                              <Upload className="text-white w-8 h-8" />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center">
+                            <Upload className="w-10 h-10 text-gray-500 mx-auto mb-3 group-hover:text-blue-400 transition-colors" />
+                            <p className="text-sm text-gray-400 group-hover:text-gray-300">{t.textureHint}</p>
+                          </div>
+                        )}
+                        {/* Invisible file input covering the whole area */}
+                        <input
+                          type="file"
+                          accept="image/png"
+                          title=""
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          onChange={async (e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              const url = URL.createObjectURL(e.target.files[0]);
+                              updateItem({ texture: url });
+                            }
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* System ID */}
