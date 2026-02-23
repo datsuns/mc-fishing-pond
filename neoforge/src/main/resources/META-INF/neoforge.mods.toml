@@ -10,6 +10,8 @@ license="MIT"
     description="""
 A fishing expansion mod for Minecraft.
 """
+    authors="datsuns"
+    displayURL="https://github.com/datsuns/mc-fishing-pond"
 
 [[mixins]]
 config="mc_fishing_pond-common.mixins.json"

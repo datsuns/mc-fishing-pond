@@ -6,6 +6,13 @@
   "description": "A fishing expansion mod for Minecraft.",
   "license": "MIT",
   "icon": "icon.png",
+  "authors": [
+    "datsuns"
+  ],
+  "contact": {
+    "homepage": "https://github.com/datsuns/mc-fishing-pond",
+    "sources": "https://github.com/datsuns/mc-fishing-pond"
+  },
   "environment": "*",
   "entrypoints": {
     "main": [
