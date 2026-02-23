@@ -1,0 +1,45 @@
+name: Publish Mod to Modrinth
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build_and_publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Build with Gradle
+        run: ./gradlew build
+
+      - name: Publish Mod to Modrinth
+        uses: modmuss50/modrinth-action@v4
+        if: ${{ env.MODRINTH_TOKEN != '' && env.MODRINTH_PROJECT_ID != '' }}
+        with:
+          token: ${{ secrets.MODRINTH_TOKEN }}
+          project_id: ${{ vars.MODRINTH_PROJECT_ID }}
+          version_number: ${{ github.ref_name }}
+          version_type: release
+          loaders: |
+            fabric
+            neoforge
+          game_versions: |
+            1.21.4
+          files: |
+            fabric/build/libs/!(*-dev|*-sources).jar
+            neoforge/build/libs/!(*-dev|*-sources).jar
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          MODRINTH_PROJECT_ID: ${{ vars.MODRINTH_PROJECT_ID }}
