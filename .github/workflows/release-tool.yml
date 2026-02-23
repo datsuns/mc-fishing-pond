@@ -8,6 +8,8 @@ on:
 
 jobs:
   release:
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -43,6 +45,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: ./tool
-          releaseId: ${{ github.ref_name }}
+          tagName: ${{ github.ref_name }}
+          releaseName: "Release ${{ github.ref_name }}"
+          releaseBody: "Automated release from ${{ github.ref_name }}"
           tauriScript: npm run tauri
           args: --target x86_64-pc-windows-msvc
