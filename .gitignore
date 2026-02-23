@@ -38,6 +38,13 @@ bin/
 .vscode/
 
 # ===========================
+# Minecraft / Fabric / NeoForge Runtime Logs
+# ===========================
+logs/
+crash-reports/
+user_jvm_args.txt
+
+# ===========================
 # IDE - run configs (Loom 生成)
 # ===========================
 runs/
