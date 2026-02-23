@@ -1,11 +1,5 @@
 # 釣り堀Mod & Studio Tool
 
-![Banner placeholder or screenshot]()
-
-*🌍 [Click here for English Documentation](#english-documentation)*
-
----
-
 ## modの説明
 
 ![ss_mod_jp](./images/ss_play_image_jp.png)
@@ -22,11 +16,11 @@
   * `/fishingpond score reset <player>` - 指定プレイヤーのスコアを「0」にリセット
   * `/fishingpond give <player> <item_id>` - 任意の釣果アイテムを直接付与
 
-### 💻 付属ツール: Fishing Pond Studio
+### 💻 Fishing Pond Studio
 
 ![ss_data_tool_jp](./images/ss_data_tool_jp.png)
 
-釣りアイテムの追加には「データパック」「リソースパック」の作成が必要です。それをするためのツールです。  
+釣りアイテムの追加に必要な「データパック」「リソースパック」を作成するためのツールです。  
 （[Releases](https://github.com/datsuns/fishingpond/releases) から `.exe` をダウンロード可能です）
 
 名前、釣れる確率、スコアを設定します。  
@@ -44,11 +38,9 @@
 
 ---
 
-## 🇬🇧 English Documentation
-
 ## Mod Description
 
-![ss_mod_en](./images/ss_play_image_jp.png)
+![ss_mod_en](./images/ss_play_image_en.png)
 
 This is a mod that allows you to add custom fishing items and calculate scores. It includes a dedicated tool called "**MC Fishing Pond Studio**" to generate these additional items.
 Scores are shared with all players participating in the world.
@@ -62,9 +54,9 @@ Scores are shared with all players participating in the world.
   * `/fishingpond score reset <player>` - Reset a specified player's score to "0"
   * `/fishingpond give <player> <item_id>` - Directly give a specified fishing item
 
-### 💻 Included Tool: Fishing Pond Studio
+### 💻 Fishing Pond Studio
 
-![ss_data_tool_en](./images/ss_data_tool_jp.png)
+![ss_data_tool_en](./images/ss_data_tool_en.png)
 
 Adding fishing items requires the creation of a "Datapack" and a "Resourcepack". This is the tool to do it.
 (The `.exe` is available for download from [Releases](https://github.com/datsuns/fishingpond/releases))
