@@ -68,8 +68,21 @@ public abstract class FishingHookMixin {
                             result.set(DataComponents.CUSTOM_NAME, Component.literal(name)));
 
                         // テクスチャ/モデルの適用 (texture 優先)
-                        def.texture().or(def::itemModel).ifPresent(res -> 
-                            result.set(DataComponents.ITEM_MODEL, res));
+                        def.texture().or(def::itemModel).ifPresent(res -> {
+                            // 1.21.4+ expects the ITEM_MODEL component to point to an item definition in assets/namespace/items/
+                            // If the datapack defines "mc_fishing_pond:item/golden_fish", we strip "item/" to get "mc_fishing_pond:golden_fish"
+                            String path = res.getPath();
+                            if (path.startsWith("item/")) {
+                                path = path.substring(5);
+                            }
+                            net.minecraft.resources.ResourceKey<net.minecraft.client.renderer.item.ItemModel.Unbaked> fakeKey = 
+                                net.minecraft.resources.ResourceKey.create(
+                                    net.minecraft.core.registries.Registries.ITEM_MODEL, 
+                                    Identifier.fromNamespaceAndPath(res.getNamespace(), path)
+                                );
+                            // Or simply setting it as Identifier (since the component accepts Identifier)
+                            result.set(DataComponents.ITEM_MODEL, Identifier.fromNamespaceAndPath(res.getNamespace(), path));
+                        });
 
                         loot.add(result);
                         FishingPond.LOGGER.info("[FishingPond] Custom item caught: {}", def.displayName().orElse("unnamed"));
