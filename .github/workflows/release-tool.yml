@@ -13,7 +13,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [windows-latest]
+        include:
+          - platform: 'windows-latest'
+            args: ''
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -40,7 +42,7 @@ jobs:
         run: npm install
 
       - name: Build Tauri App
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -48,5 +50,4 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: "Release ${{ github.ref_name }}"
           releaseBody: "Automated release from ${{ github.ref_name }}"
-          tauriScript: npm run tauri
-          args: --target x86_64-pc-windows-msvc
+          args: ${{ matrix.args }}
