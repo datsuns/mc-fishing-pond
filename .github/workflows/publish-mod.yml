@@ -26,21 +26,7 @@ jobs:
         run: ./gradlew build
 
       - name: Publish Mod to Modrinth
-        uses: modmuss50/mod-publish-action@v2
+        run: ./gradlew publishModrinth
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
         if: ${{ secrets.MODRINTH_TOKEN != '' }}
-        with:
-          modrinth_token: ${{ secrets.MODRINTH_TOKEN }}
-          modrinth_id: ${{ vars.MODRINTH_PROJECT_ID }}
-          version: ${{ github.ref_name }}
-          version_type: release
-          loaders: |
-            fabric
-            neoforge
-          game_versions: |
-            1.21.4
-          files: |
-            fabric/build/libs/*.jar
-            neoforge/build/libs/*.jar
-          # 特定のファイルを除外する場合、files の指定をより厳密にするか、
-          # Gradle のビルド成果物を整理する必要があります。
-          # 一旦ドキュメントに近い形式に整理します。
