@@ -1,7 +1,10 @@
+import com.modrinth.minotaur.dependencies.ModDependency
+
 plugins {
     id 'dev.architectury.loom'
     id 'architectury-plugin'
     id 'com.github.johnrengelman.shadow'
+    id "com.modrinth.minotaur"
 }
 
 architectury {
@@ -70,5 +73,17 @@ components.java {
 
 loom {
     
+}
 
+modrinth {
+    token = System.getenv('MODRINTH_TOKEN')
+    projectId = "${project.modrinth_project_id}"
+    versionNumber = "v${project.mod_version}-mc${project.minecraft_version}-neoforge"
+    versionName = "${project.mod_version}-NeoForge for Minecraft v${project.minecraft_version}"
+    uploadFile = remapJar
+    gameVersions = [project.minecraft_version]
+    loaders = ['neoforge']
+    dependencies = [
+        new ModDependency('lhGA9TYQ', 'required')
+    ]
 }
