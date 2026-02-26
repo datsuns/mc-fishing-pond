@@ -4,7 +4,7 @@ plugins {
     id 'dev.architectury.loom'
     id 'architectury-plugin'
     id 'com.github.johnrengelman.shadow'
-    id "com.modrinth.minotaur" version "2.+"
+    id "com.modrinth.minotaur"
 }
 
 architectury {
@@ -72,10 +72,6 @@ components.java {
     }
 }
 
-loom {
-    
-}
-
 modrinth {
     token = System.getenv('MODRINTH_TOKEN')
     projectId = "${project.modrinth_project_id}"
@@ -85,7 +81,11 @@ modrinth {
     gameVersions = [project.minecraft_version]
     loaders = ['fabric']
     dependencies = [
-        new ModDependency('P7dR8mSH', 'required')
+        new ModDependency('P7dR8mSH', 'required'),
         new ModDependency('lhGA9TYQ', 'required')
     ]
+}
+
+loom {
+    
 }
