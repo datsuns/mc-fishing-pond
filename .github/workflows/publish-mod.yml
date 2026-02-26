@@ -29,4 +29,3 @@ jobs:
         run: ./gradlew publishModrinth
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-        if: ${{ secrets.MODRINTH_TOKEN != '' }}
