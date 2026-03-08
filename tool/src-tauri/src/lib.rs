@@ -73,7 +73,7 @@ fn list_minecraft_worlds(path: String) -> Result<Vec<WorldInfo>, String> {
                         let profile_name = if let Some(name) = profile_name_opt {
                             name.to_string()
                         } else if game_dir == mc_dir {
-                            "デフォルトの構成".to_string()
+                            "__DEFAULT_PROFILE__".to_string()
                         } else {
                             let path_str = game_dir.to_string_lossy().to_string();
                             if path_str.is_empty() {
@@ -95,9 +95,9 @@ fn list_minecraft_worlds(path: String) -> Result<Vec<WorldInfo>, String> {
 
     // Always include the default .minecraft dir if nothing was added
     if game_dirs.is_empty() {
-        game_dirs.push((mc_dir.clone(), "デフォルトの構成".to_string()));
+        game_dirs.push((mc_dir.clone(), "__DEFAULT_PROFILE__".to_string()));
     } else if !game_dirs.iter().any(|(d, _)| d == &mc_dir) {
-        game_dirs.push((mc_dir.clone(), "デフォルトの構成".to_string()));
+        game_dirs.push((mc_dir.clone(), "__DEFAULT_PROFILE__".to_string()));
     }
 
 

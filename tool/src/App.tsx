@@ -71,7 +71,8 @@ function App() {
     deployError: lang === 'en' ? 'Deployment failed.' : '反映に失敗しました。',
     emptyListError: lang === 'en' ? 'Please add at least one item before deploying.' : '反映する前に少なくとも1つのアイテムを追加してください。',
     refresh: lang === 'en' ? 'Refresh' : '更新',
-    openFolder: lang === 'en' ? 'Open Folder' : 'フォルダを開く'
+    openFolder: lang === 'en' ? 'Open Folder' : 'フォルダを開く',
+    defaultProfile: lang === 'en' ? 'Default Profile' : 'デフォルトの構成'
   };
 
   // Load Minecraft path and worlds on mount
@@ -616,7 +617,7 @@ function App() {
                                   <div className="px-3 py-1.5 bg-[#2a2d3e] text-[10px] font-bold text-blue-300 uppercase tracking-widest flex items-center justify-between sticky top-0 z-10 border-y border-white/5">
                                     <div className="flex items-center gap-2">
                                       <Terminal size={10} />
-                                      {profile}
+                                      {profile === '__DEFAULT_PROFILE__' ? t.defaultProfile : profile}
                                     </div>
                                     {profileWorld && (
                                       <button
