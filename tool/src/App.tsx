@@ -72,7 +72,10 @@ function App() {
     emptyListError: lang === 'en' ? 'Please add at least one item before deploying.' : '反映する前に少なくとも1つのアイテムを追加してください。',
     refresh: lang === 'en' ? 'Refresh' : '更新',
     openFolder: lang === 'en' ? 'Open Folder' : 'フォルダを開く',
-    defaultProfile: lang === 'en' ? 'Default Profile' : 'デフォルトの構成'
+    defaultProfile: lang === 'en' ? 'Default Profile' : 'デフォルトの構成',
+    loadMetadata: lang === 'en' ? 'Load Previous State' : '前回の状態をロード',
+    loadSuccess: lang === 'en' ? 'Successfully loaded previous state!' : '前回の状態を読み込みました！',
+    loadError: lang === 'en' ? 'Failed to load previous state.' : '状態の読み込みに失敗しました。'
   };
 
   // Load Minecraft path and worlds on mount
@@ -146,6 +149,61 @@ function App() {
   const handleOpenFolder = async () => {
     if (selectedWorldPath) {
       await handleOpenPath(selectedWorldPath);
+    }
+  };
+
+  const handleLoadMetadata = async () => {
+    if (!selectedWorldPath || !mcPath) return;
+
+    try {
+      const metadataStr = await invoke<string | null>('load_studio_metadata', {
+        worldPath: selectedWorldPath,
+        minecraftPath: mcPath
+      });
+
+      if (!metadataStr) {
+        setDeployResult('error'); // Or some other indication that nothing was found
+        return;
+      }
+
+      const loadedItems: CustomItem[] = JSON.parse(metadataStr);
+
+      // Find the selected world info to get its game_dir
+      const selectedWorld = worlds.find(w => w.path === selectedWorldPath);
+      if (!selectedWorld) {
+        throw new Error("Selected world info not found");
+      }
+
+      const restoredItems = await Promise.all(loadedItems.map(async (item) => {
+        // Path to the texture in the resourcepack
+        const texPath = `${selectedWorld.game_dir}/resourcepacks/mc_fishing_pond_resourcepack/assets/mc_fishing_pond/textures/item/${item.systemId}.png`;
+        let textureUrl = item.texture;
+
+        try {
+          if (await exists(texPath)) {
+            textureUrl = convertFileSrc(texPath);
+          }
+        } catch (e) {
+          console.warn(`Failed to check/load texture for ${item.systemId}:`, e);
+        }
+
+        return {
+          ...item,
+          texture: textureUrl,
+          id: Date.now().toString() + Math.random()
+        };
+      }));
+
+      setItems(restoredItems);
+      if (restoredItems.length > 0) {
+        setSelectedId(restoredItems[0].id);
+      }
+      setDeployResult('success');
+      setTimeout(() => setDeployResult(null), 3000);
+      await message(t.loadSuccess, { title: 'Success', kind: 'info' });
+    } catch (e) {
+      console.error("Failed to load metadata:", e);
+      await message(t.loadError, { title: 'Error', kind: 'error' });
     }
   };
 
@@ -329,10 +387,18 @@ function App() {
         };
       }));
 
+      // --- Metadata for Studio State Recovery ---
+      // We strip the texture object URL as it expires
+      const metadata = JSON.stringify(items.map(item => ({
+        ...item,
+        texture: undefined
+      })));
+
       await invoke('save_packs_to_minecraft', {
         worldPath: selectedWorldPath,
         minecraftPath: mcPath,
-        items: payloadItems
+        items: payloadItems,
+        studioMetadata: metadata
       });
 
       setDeployResult('success');
@@ -674,6 +740,15 @@ function App() {
                       className="p-2 bg-[#1e1e1e] border border-gray-700 rounded text-gray-400 hover:text-white hover:border-gray-600 transition-all disabled:opacity-50"
                     >
                       <Plus size={16} className="rotate-45" />
+                    </button>
+
+                    <button
+                      onClick={handleLoadMetadata}
+                      disabled={isDeploying || !selectedWorldPath}
+                      title={t.loadMetadata}
+                      className="p-2 bg-blue-600/20 border border-blue-500/50 rounded text-blue-400 hover:bg-blue-600/30 hover:text-white hover:border-blue-400 transition-all disabled:opacity-50"
+                    >
+                      <Download size={16} />
                     </button>
                   </div>
                 </div>

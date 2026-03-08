@@ -151,6 +151,7 @@ fn save_packs_to_minecraft(
     world_path: String,
     minecraft_path: String,
     items: Vec<PackPayload>,
+    studio_metadata: String,
 ) -> Result<(), String> {
     let world_dir = PathBuf::from(&world_path);
     let mc_dir = PathBuf::from(&minecraft_path);
@@ -160,8 +161,6 @@ fn save_packs_to_minecraft(
     }
 
     // Infer the game dir from the world path:
-    // world_dir = <game_dir>/saves/<world_name>
-    // parent of saves = game_dir
     let game_dir = world_dir
         .parent() // .../saves
         .and_then(|p| p.parent()) // .../game_dir
@@ -176,10 +175,27 @@ fn save_packs_to_minecraft(
     fs::create_dir_all(&rp_path)
         .map_err(|e| format!("Failed to create resourcepack dir: {}", e))?;
 
-    // pack.mcmeta — datapack
+    // --- Save Tool Metadata (Studio 設計図) ---
+    // Datapack root (inside data/)
+    let dp_data_dir = dp_path.join("data");
+    fs::create_dir_all(&dp_data_dir).map_err(|e| e.to_string())?;
+    fs::write(dp_data_dir.join("fishing_pond_studio.json"), &studio_metadata)
+        .map_err(|e| format!("Failed to save studio metadata to datapack: {}", e))?;
+
+    // Resourcepack root (inside assets/)
+    let rp_assets_dir = rp_path.join("assets");
+    fs::create_dir_all(&rp_assets_dir).map_err(|e| e.to_string())?;
+    fs::write(rp_assets_dir.join("fishing_pond_studio.json"), &studio_metadata)
+        .map_err(|e| format!("Failed to save studio metadata to resourcepack: {}", e))?;
+
+
+    // pack.mcmeta — datapack (Universal Triple Definition)
     let dp_mcmeta = serde_json::json!({
         "pack": {
             "pack_format": 48,
+            "supported_formats": { "min_inclusive": 48, "max_inclusive": 999 },
+            "min_format": 48,
+            "max_format": 999,
             "description": "Fishing Pond Custom Items"
         }
     });
@@ -189,10 +205,13 @@ fn save_packs_to_minecraft(
     )
     .map_err(|e| e.to_string())?;
 
-    // pack.mcmeta — resourcepack
+    // pack.mcmeta — resourcepack (Universal Triple Definition)
     let rp_mcmeta = serde_json::json!({
         "pack": {
             "pack_format": 34,
+            "supported_formats": { "min_inclusive": 34, "max_inclusive": 999 },
+            "min_format": 34,
+            "max_format": 999,
             "description": "Fishing Pond Custom Resources"
         }
     });
@@ -241,6 +260,36 @@ fn save_packs_to_minecraft(
 }
 
 #[tauri::command]
+async fn load_studio_metadata(world_path: String, minecraft_path: String) -> Result<Option<String>, String> {
+    let world_dir = PathBuf::from(&world_path);
+    let mc_dir = PathBuf::from(&minecraft_path);
+
+    // Try datapack first
+    let dp_meta = world_dir.join("datapacks/mc_fishing_pond_datapack/data/fishing_pond_studio.json");
+    if dp_meta.exists() {
+        return fs::read_to_string(dp_meta)
+            .map(Some)
+            .map_err(|e| format!("Failed to read datapack metadata: {}", e));
+    }
+
+    // Try resourcepack as fallback
+    let game_dir = world_dir
+        .parent()
+        .and_then(|p| p.parent())
+        .map(|p| p.to_path_buf())
+        .unwrap_or(mc_dir);
+    
+    let rp_meta = game_dir.join("resourcepacks/mc_fishing_pond_resourcepack/assets/fishing_pond_studio.json");
+    if rp_meta.exists() {
+        return fs::read_to_string(rp_meta)
+            .map(Some)
+            .map_err(|e| format!("Failed to read resourcepack metadata: {}", e));
+    }
+
+    Ok(None)
+}
+
+#[tauri::command]
 fn open_folder(path: String) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
@@ -276,6 +325,7 @@ pub fn run() {
             get_minecraft_path,
             list_minecraft_worlds,
             save_packs_to_minecraft,
+            load_studio_metadata,
             open_folder
         ])
         .run(tauri::generate_context!())
