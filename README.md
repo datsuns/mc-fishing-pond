@@ -27,6 +27,8 @@
 名前、釣れる確率、スコアを設定します。  
 画像は「既にある画像の取り込み」「手動で描画」のどちらも可能です。  
 
+[詳細な使い方はこちら](./fishing_pond_studio.ja.md)を参照ください。
+
 ### 📥 インストール方法 (How to Install)
 
 1. **Mod本体**: ModrinthまたはReleasesから `fabric` / `neoforge` の `.jar` ファイルをダウンロードし、クライアントおよびサーバーの `mods` フォルダに配置します。
@@ -66,6 +68,8 @@ Adding fishing items requires the creation of a "Datapack" and a "Resourcepack".
 
 Set the name, catch probability, and score.
 For images, you can both "import an existing image" or "draw manually" using the in-app pixel editor.
+
+[Refer this](./fishing_pond_studio.en.md) for details.
 
 ### 📥 How to Install
 
