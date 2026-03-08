@@ -5,4 +5,4 @@
 - All communication with the user must be in **Japanese**
 
 ## Git
-- Do not make git commits until explicitly requested by the user. (gitのcommitは私がお願いするまで控えてください)
+- **重要**: gitのcommitは、ユーザーから明確な指示（「コミットしてください」等）があるまで絶対に行わないでください。作業の区切りであっても、まずは報告に留めてください。
