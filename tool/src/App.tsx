@@ -3,6 +3,7 @@ import { Download, Upload, Plus, Trash2, Globe, FileBox, FolderSearch, CheckCirc
 import { open, message } from '@tauri-apps/plugin-dialog';
 import { readTextFile, exists, readDir } from '@tauri-apps/plugin-fs';
 import { convertFileSrc, invoke } from '@tauri-apps/api/core';
+import { getVersion } from '@tauri-apps/api/app';
 import { PixelEditor } from './PixelEditor';
 import './App.css';
 
@@ -41,6 +42,11 @@ function App() {
   const [deployResult, setDeployResult] = useState<'success' | 'error' | null>(null);
   const [isWorldSelectorOpen, setIsWorldSelectorOpen] = useState(false);
   const worldSelectorRef = useRef<HTMLDivElement>(null);
+  const [appVersion, setAppVersion] = useState<string>('');
+
+  useEffect(() => {
+    getVersion().then(setAppVersion).catch(() => setAppVersion(''));
+  }, []);
 
   const selectedItem = items.find(i => i.id === selectedId);
 
@@ -420,7 +426,12 @@ function App() {
       <div className="flex items-center justify-between px-4 py-3 bg-[#1e1e1e] border-b border-gray-800 shrink-0 select-none">
         <div className="flex items-center gap-2">
           <FileBox className="text-blue-500" size={20} />
-          <h1 className="text-lg font-semibold tracking-wide">{t.title}</h1>
+          <div>
+            <h1 className="text-lg font-semibold tracking-wide leading-tight">{t.title}</h1>
+            {appVersion && (
+              <span className="text-xs text-gray-500">v{appVersion}</span>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <button
